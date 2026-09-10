@@ -10,16 +10,41 @@ unsigned long ds_last_received_time = 0;
 byte receiveType = DS_CONTROL_DATA;
 bool controllerConnected = false;
 
+struct LedState {
+  uint32_t pin;
+  uint32_t onSince;
+  bool active;
+};
+
+static LedState ledBlue   = { LED_BLUE,   0, false }; // X
+static LedState ledGreen  = { LED_GREEN,  0, false }; // Square
+static LedState ledOrange = { LED_ORANGE, 0, false }; // Triangle
+static LedState ledRed    = { LED_RED,    0, false }; // Circle
+
+static void pulseLED(LedState &led) {
+  digitalWrite(led.pin, HIGH); led.onSince = millis(); led.active = true;
+}
+
+static void refreshLED(LedState &led) {
+  if (led.active && millis() - led.onSince >= LED_PULSE_DURATION_MS) {
+    digitalWrite(led.pin, LOW); led.active = false;
+  }
+}
+
+void updateLED() {
+  refreshLED(ledBlue); refreshLED(ledGreen); refreshLED(ledOrange); refreshLED(ledRed);
+}
+
 void setupCom() {
   SerialUSB.begin(115200);
   Serial3.begin(115200);
 
-  pinMode(LED_GREEN, OUTPUT); digitalWrite(LED_GREEN, LOW);
-  initializeControllerPayload();
-}
+  pinMode(LED_GREEN, OUTPUT);  digitalWrite(LED_GREEN, LOW);
+  pinMode(LED_ORANGE, OUTPUT); digitalWrite(LED_ORANGE, LOW);
+  pinMode(LED_RED, OUTPUT);    digitalWrite(LED_RED, LOW);
+  pinMode(LED_BLUE, OUTPUT);   digitalWrite(LED_BLUE, LOW);
 
-void blinkLED() {
-  digitalWrite(LED_GREEN, HIGH); delay(100); digitalWrite(LED_GREEN, LOW); delay(50);
+  initializeControllerPayload();
 }
 
 void initializeControllerPayload() {
@@ -116,7 +141,22 @@ ButtonEvent readButtonEvent() {
   else if ((d & 0x04) && !(prevDpad & 0x04)) event = BUTTON_DPAD_RIGHT;
 
   prevButtons = b; prevDpad = d;
-  //if(event != BUTTON_NONE) blinkLED();
+
+  switch (event) {
+    case BUTTON_X:
+      SerialUSB.println("[BUTTON] X pressed -> LED BLUE");
+      pulseLED(ledBlue); break;
+    case BUTTON_SQUARE:
+      SerialUSB.println("[BUTTON] Square pressed -> LED GREEN");
+      pulseLED(ledGreen); break;
+    case BUTTON_TRIANGLE:
+      SerialUSB.println("[BUTTON] Triangle pressed -> LED ORANGE");
+      pulseLED(ledOrange); break;
+    case BUTTON_CIRCLE:
+      SerialUSB.println("[BUTTON] Circle pressed -> LED RED");
+      pulseLED(ledRed); break;
+    default: break;
+  }
   return event;
 }
 

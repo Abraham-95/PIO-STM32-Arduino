@@ -33,8 +33,10 @@ void loop() {
   if (currentLoopTime - previousLoopTime < LOOP_PERIOD) return;
   previousLoopTime = currentLoopTime;
 
+  updateLED();
+
   bool connected = receiveComData();
-  if (!connected && controlMode == AUTO) {changeMode(standbyMode);}
+  if (!connected && currentMode != standbyMode) {changeMode(standbyMode);}
 
   if (receiveType == DS_CONTROL_DATA) {
     ButtonEvent event = readButtonEvent();

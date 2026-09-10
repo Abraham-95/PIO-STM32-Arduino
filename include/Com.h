@@ -9,6 +9,7 @@
 #define PRESSED 0x1
 
 #define INTERVAL_MS_SIGNAL_LOST 1000
+#define LED_PULSE_DURATION_MS 1000
 
 enum EventCode {
   EVENT_CONNECTED    = 1,
@@ -56,7 +57,7 @@ extern bool controllerConnected;
 extern ButtonEvent readButtonEvent();
 
 void setupCom();
-void blinkLED();
+void updateLED();
 bool receiveComData();
 void initializeControllerPayload();
 
